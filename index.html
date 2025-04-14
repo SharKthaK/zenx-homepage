@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZENX</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow-x: hidden;
+      position: relative;
+      background: linear-gradient(135deg, #ff6b6b, #4ecdc4);
+    }
+
+    canvas#bg-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      opacity: 0.4;
+    }
+
+    .container {
+      text-align: center;
+      z-index: 1;
+      width: 90%;
+      max-width: 1200px;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .settings-btn {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: #ff4757;
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      z-index: 100;
+    }
+
+    .settings-btn:hover {
+      background: #e84118;
+    }
+
+    .logo {
+      font-size: 48px;
+      font-weight: 800;
+      background: linear-gradient(45deg, #ff9f43, #ee5253, #0abde3, #10ac84);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 20px;
+      animation: pulse 2s infinite ease-in-out;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    .search-container {
+      position: relative;
+      margin: 20px 0;
+    }
+
+    #search-input {
+      width: 100%;
+      max-width: 400px;
+      padding: 14px 50px 14px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 30px;
+      background: rgba(255, 255, 255, 0.85);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      outline: none;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    #search-input:focus {
+      transform: scale(1.02);
+      box-shadow: 0 6px 25px rgba(0, 0, 0, 0.3);
+    }
+
+    #search-btn {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: #ff4757;
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    #search-btn:hover {
+      background: #e84118;
+    }
+
+    .suggestions {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      max-width: 400px;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 10;
+      display: none;
+    }
+
+    .suggestion-item {
+      padding: 10px 20px;
+      font-size: 14px;
+      color: #333;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .suggestion-item:hover {
+      background: #f0f0f0;
+    }
+
+    .speed-dial {
+      margin-top: 20px;
+    }
+
+    .dial-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .dial-item {
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 15px;
+      padding: 15px;
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+      position: relative;
+    }
+
+    .dial-item:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+    }
+
+    .dial-item img {
+      width: 40px;
+      height: 40px;
+      margin-bottom: 8px;
+    }
+
+    .dial-item p {
+      font-size: 12px;
+      color: #333;
+      font-weight: 600;
+    }
+
+    .dial-item .menu-btn {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background: #999;
+      border: none;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      color: white;
+    }
+
+    .dial-item .menu {
+      position: absolute;
+      top: 30px;
+      right: 5px;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      display: none;
+      z-index: 20;
+    }
+
+    .dial-item .menu-item {
+      padding: 8px 16px;
+      font-size: 12px;
+      color: #333;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .dial-item .menu-item:hover {
+      background: #f0f0f0;
+    }
+
+    .add-btn {
+      background: #1dd1a1;
+      border: none;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      transition: transform 0.3s ease;
+      margin: 0 auto;
+    }
+
+    .add-btn:hover {
+      transform: scale(1.1);
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 15px;
+      padding: 20px;
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+      animation: slideIn 0.3s ease;
+    }
+
+    .modal-content h2 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    .modal-content input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    .settings-option {
+      margin: 15px 0;
+      text-align: left;
+    }
+
+    .settings-option label {
+      font-size: 14px;
+      color: #333;
+      margin-bottom: 5px;
+      display: block;
+    }
+
+    .modal-buttons {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 20px;
+    }
+
+    .modal-buttons button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    #save-site,
+    #save-settings {
+      background: #1dd1a1;
+      color: white;
+    }
+
+    #cancel-site,
+    #cancel-settings {
+      background: #ff6b6b;
+      color: white;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateY(-50px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    @media (max-width: 600px) {
+      .logo { font-size: 36px; }
+      .dial-grid { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); }
+      #search-input { max-width: 300px; }
+      .suggestions { max-width: 300px; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="bg-canvas"></canvas>
+  <button class="settings-btn" id="settings-btn">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+      <line x1="4" y1="6" x2="20" y2="6"></line>
+      <line x1="4" y1="12" x2="20" y2="12"></line>
+      <line x1="4" y1="18" x2="20" y2="18"></line>
+    </svg>
+  </button>
+  <div class="container">
+    <h1 class="logo">ZENX</h1>
+    <div class="search-container">
+      <input type="text" id="search-input" placeholder="Search ZENX..." autocomplete="off">
+      <button id="search-btn">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+      </button>
+      <div class="suggestions" id="suggestions"></div>
+    </div>
+    <div class="speed-dial">
+      <div class="dial-grid" id="dial-grid"></div>
+      <button class="add-btn" id="add-dial">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+  <div class="modal" id="add-modal">
+    <div class="modal-content">
+      <h2 id="modal-title">Add Favorite Site</h2>
+      <input type="text" id="site-name" placeholder="Site Name (e.g., YouTube)">
+      <input type="text" id="site-url" placeholder="URL (e.g., youtube.com)">
+      <div class="modal-buttons">
+        <button id="save-site">Save</button>
+        <button id="cancel-site">Cancel</button>
+      </div>
+    </div>
+  </div>
+  <div class="modal" id="settings-modal">
+    <div class="modal-content">
+      <h2>Settings</h2>
+      <div class="settings-option">
+        <label for="theme">Theme:</label>
+        <select id="theme">
+          <option value="default">Default</option>
+          <option value="dark">Dark</option>
+          <option value="ocean">Ocean</option>
+        </select>
+      </div>
+      <div class="settings-option">
+        <label for="search-engine">Search Engine:</label>
+        <select id="search-engine">
+          <option value="google">Google</option>
+          <option value="bing">Bing</option>
+          <option value="duckduckgo">DuckDuckGo</option>
+        </select>
+      </div>
+      <div class="modal-buttons">
+        <button id="save-settings">Save</button>
+        <button id="cancel-settings">Cancel</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Speed Dial
+    let speedDial = JSON.parse(localStorage.getItem('speedDial')) || [];
+    let settings = JSON.parse(localStorage.getItem('settings')) || {
+      theme: 'default',
+      searchEngine: 'google'
+    };
+
+    function renderSpeedDial() {
+      const grid = document.getElementById('dial-grid');
+      if (!grid) {
+        console.error('Dial grid element not found');
+        return;
+      }
+      grid.innerHTML = '';
+      speedDial.forEach((site, index) => {
+        const item = document.createElement('div');
+        item.className = 'dial-item';
+        item.innerHTML = `
+          <img src="${site.favicon || 'https://www.google.com/s2/favicons?domain=' + site.url}" alt="${site.name}">
+          <p>${site.name}</p>
+          <button class="menu-btn" title="Menu">⋮</button>
+          <div class="menu">
+            <div class="menu-item" data-action="edit">Edit</div>
+            <div class="menu-item" data-action="remove">Remove</div>
+          </div>
+        `;
+        const menuBtn = item.querySelector('.menu-btn');
+        const menu = item.querySelector('.menu');
+        menuBtn.onclick = (e) => {
+          e.stopPropagation();
+          document.querySelectorAll('.menu').forEach(m => m.style.display = 'none');
+          menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        };
+        menu.querySelectorAll('.menu-item').forEach(option => {
+          option.onclick = (e) => {
+            e.stopPropagation();
+            menu.style.display = 'none';
+            if (option.dataset.action === 'edit') openEditModal(index);
+            else if (option.dataset.action === 'remove') deleteSite(index);
+          };
+        });
+        item.onclick = (e) => {
+          if (!e.target.classList.contains('menu-btn') && !e.target.classList.contains('menu-item')) {
+            openUrl(site.url, site.name);
+          }
+        };
+        grid.appendChild(item);
+      });
+    }
+
+    function openEditModal(index) {
+      const modal = document.getElementById('add-modal');
+      const title = document.getElementById('modal-title');
+      const nameInput = document.getElementById('site-name');
+      const urlInput = document.getElementById('site-url');
+      const saveBtn = document.getElementById('save-site');
+
+      if (!modal || !title || !nameInput || !urlInput || !saveBtn) {
+        console.error('Modal or input elements not found');
+        return;
+      }
+
+      title.textContent = 'Edit Favorite Site';
+      nameInput.value = speedDial[index].name;
+      urlInput.value = speedDial[index].url;
+      modal.style.display = 'flex';
+
+      saveBtn.onclick = () => {
+        const name = nameInput.value.trim();
+        let url = urlInput.value.trim();
+        if (name && url) {
+          url = url.startsWith('http') ? url : `https://${url}`;
+          speedDial[index] = {
+            name,
+            url,
+            favicon: `https://www.google.com/s2/favicons?domain=${url}`
+          };
+          localStorage.setItem('speedDial', JSON.stringify(speedDial));
+          renderSpeedDial();
+          modal.style.display = 'none';
+        }
+      };
+    }
+
+    function deleteSite(index) {
+      if (confirm('Are you sure you want to delete this site?')) {
+        speedDial.splice(index, 1);
+        localStorage.setItem('speedDial', JSON.stringify(speedDial));
+        renderSpeedDial();
+      }
+    }
+
+    function openUrl(url, title) {
+      if (!url) {
+        console.error('No URL provided');
+        return;
+      }
+      if (!url.startsWith('http') && !url.startsWith('https')) {
+        const engine = settings.searchEngine;
+        const searchUrl = {
+          google: `https://www.google.com/search?q=${encodeURIComponent(url)}`,
+          bing: `https://www.bing.com/search?q=${encodeURIComponent(url)}`,
+          duckduckgo: `https://duckduckgo.com/?q=${encodeURIComponent(url)}`
+        }[engine];
+        url = searchUrl || `https://www.google.com/search?q=${encodeURIComponent(url)}`;
+      }
+      window.open(url, '_blank');
+    }
+
+    // Search Functionality
+    const searchInput = document.getElementById('search-input');
+    const suggestionsBox = document.getElementById('suggestions');
+
+    function performSearch(query) {
+      if (query) openUrl(query);
+    }
+
+    document.getElementById('search-btn').onclick = () => {
+      performSearch(searchInput.value);
+    };
+
+    searchInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        performSearch(searchInput.value);
+      }
+    });
+
+    // Real-time Suggestions using DuckDuckGo API with Proxy
+    async function fetchSuggestions(query) {
+      if (!query || query.length < 1) {
+        suggestionsBox.style.display = 'none';
+        return [];
+      }
+      try {
+        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://api.duckduckgo.com/ac/?q=${encodeURIComponent(query)}&format=json`)}`;
+        const response = await fetch(proxyUrl);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const data = JSON.parse((await response.json()).contents);
+        console.log('Raw API Response:', data); // Log the full response
+        return data && Array.isArray(data.data) ? data.data : [];
+      } catch (error) {
+        console.error('Suggestion fetch error:', error);
+        return []; // Return empty to avoid crashing
+      }
+    }
+
+    searchInput.addEventListener('input', async () => {
+      const query = searchInput.value.trim();
+      suggestionsBox.innerHTML = '';
+
+      if (query.length === 0) {
+        suggestionsBox.style.display = 'none';
+        return;
+      }
+
+      const suggestions = await fetchSuggestions(query);
+      console.log('Processed Suggestions:', suggestions); // Log what we’re working with
+      if (suggestions.length > 0) {
+        suggestions.forEach(suggestion => {
+          const suggestionItem = document.createElement('div');
+          suggestionItem.className = 'suggestion-item';
+          suggestionItem.textContent = suggestion;
+          suggestionItem.onclick = () => {
+            searchInput.value = suggestion;
+            suggestionsBox.style.display = 'none';
+            performSearch(suggestion);
+          };
+          suggestionsBox.appendChild(suggestionItem);
+        });
+        suggestionsBox.style.display = 'block';
+      } else {
+        suggestionsBox.style.display = 'none';
+      }
+    });
+
+    // Close suggestions when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!searchInput.contains(e.target) && !suggestionsBox.contains(e.target)) {
+        suggestionsBox.style.display = 'none';
+      }
+      if (!e.target.classList.contains('menu-btn') && !e.target.classList.contains('menu-item')) {
+        document.querySelectorAll('.menu').forEach(m => m.style.display = 'none');
+      }
+    });
+
+    // Modal for Adding Sites
+    const modal = document.getElementById('add-modal');
+    const addBtn = document.getElementById('add-dial');
+    const saveBtn = document.getElementById('save-site');
+    const cancelBtn = document.getElementById('cancel-site');
+
+    if (addBtn && saveBtn && cancelBtn) {
+      addBtn.onclick = () => {
+        const title = document.getElementById('modal-title');
+        const nameInput = document.getElementById('site-name');
+        const urlInput = document.getElementById('site-url');
+        if (title && nameInput && urlInput) {
+          title.textContent = 'Add Favorite Site';
+          nameInput.value = '';
+          urlInput.value = '';
+          modal.style.display = 'flex';
+          saveBtn.onclick = () => {
+            const name = nameInput.value.trim();
+            let url = urlInput.value.trim();
+            if (name && url) {
+              url = url.startsWith('http') ? url : `https://${url}`;
+              speedDial.push({
+                name,
+                url,
+                favicon: `https://www.google.com/s2/favicons?domain=${url}`
+              });
+              localStorage.setItem('speedDial', JSON.stringify(speedDial));
+              renderSpeedDial();
+              modal.style.display = 'none';
+            }
+          };
+        }
+      };
+
+      cancelBtn.onclick = () => {
+        modal.style.display = 'none';
+      };
+    } else {
+      console.error('Modal or button elements not found');
+    }
+
+    // Settings Modal
+    const settingsModal = document.getElementById('settings-modal');
+    const settingsBtn = document.getElementById('settings-btn');
+    const saveSettingsBtn = document.getElementById('save-settings');
+    const cancelSettingsBtn = document.getElementById('cancel-settings');
+
+    if (settingsBtn && saveSettingsBtn && cancelSettingsBtn) {
+      settingsBtn.onclick = () => {
+        document.getElementById('theme').value = settings.theme;
+        document.getElementById('search-engine').value = settings.searchEngine;
+        settingsModal.style.display = 'flex';
+      };
+
+      saveSettingsBtn.onclick = () => {
+        settings = {
+          theme: document.getElementById('theme').value,
+          searchEngine: document.getElementById('search-engine').value
+        };
+        localStorage.setItem('settings', JSON.stringify(settings));
+        document.body.style.background = settings.theme === 'dark' ? 'linear-gradient(135deg, #2c3e50, #34495e)' :
+          settings.theme === 'ocean' ? 'linear-gradient(135deg, #2ecc71, #3498db)' : 'linear-gradient(135deg, #ff6b6b, #4ecdc4)';
+        settingsModal.style.display = 'none';
+      };
+
+      cancelSettingsBtn.onclick = () => {
+        settingsModal.style.display = 'none';
+      };
+    } else {
+      console.error('Settings modal or button elements not found');
+    }
+
+    // Background Animation
+    const canvas = document.getElementById('bg-canvas');
+    const ctx = canvas.getContext('2d');
+    if (canvas && ctx) {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const particles = [];
+      const particleCount = 100;
+
+      class Particle {
+        constructor() {
+          this.x = Math.random() * canvas.width;
+          this.y = Math.random() * canvas.height;
+          this.size = Math.random() * 3 + 1;
+          this.speedX = Math.random() * 0.5 - 0.25;
+          this.speedY = Math.random() * 0.5 - 0.25;
+        }
+        update() {
+          this.x += this.speedX;
+          this.y += this.speedY;
+          if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
+          if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
+        }
+        draw() {
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      function initParticles() {
+        for (let i = 0; i < particleCount; i++) {
+          particles.push(new Particle());
+        }
+      }
+
+      function animateParticles() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach((particle) => {
+          particle.update();
+          particle.draw();
+        });
+        requestAnimationFrame(animateParticles);
+      }
+
+      initParticles();
+      animateParticles();
+
+      window.addEventListener('resize', () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      });
+    } else {
+      console.error('Canvas or context not available');
+    }
+
+    // Initialize
+    renderSpeedDial();
+  </script>
+</body>
+</html>
